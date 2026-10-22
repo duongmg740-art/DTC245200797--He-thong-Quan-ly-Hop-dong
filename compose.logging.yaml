@@ -1,0 +1,75 @@
+services:
+  log-init:
+    command: ["sh", "-c", "chown 10001:2000 /logs && chmod 2770 /logs && chown 10001:10001 /positions && chmod 0750 /positions"]
+    volumes:
+      - contract-logs:/logs
+      - promtail-positions:/positions
+
+  db:
+    group_add:
+      - "2000"
+    volumes:
+      - contract-logs:/var/log/contracts
+    depends_on:
+      log-init:
+        condition: service_completed_successfully
+    command:
+      - postgres
+      - -c
+      - logging_collector=on
+      - -c
+      - log_directory=/var/log/contracts
+      - -c
+      - log_filename=postgres.log
+      - -c
+      - log_file_mode=0640
+      - -c
+      - log_rotation_age=1d
+
+  loki:
+    image: grafana/loki:3.3.2
+    user: "10001:10001"
+    command: ["-config.file=/etc/loki/loki.yaml"]
+    volumes:
+      - ./logging/loki/loki.yaml:/etc/loki/loki.yaml:ro
+      - loki-data:/loki
+    networks:
+      - observability
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  grafana:
+    depends_on:
+      - loki
+
+  promtail:
+    image: grafana/promtail:3.3.2
+    user: "10001:10001"
+    command: ["-config.file=/etc/promtail/promtail.yaml"]
+    volumes:
+      - ./logging/promtail/promtail.yaml:/etc/promtail/promtail.yaml:ro
+      - contract-logs:/var/log/contracts:ro
+      - promtail-positions:/run/promtail
+    networks:
+      - observability
+    group_add:
+      - "2000"
+    depends_on:
+      log-init:
+        condition: service_completed_successfully
+      loki:
+        condition: service_started
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+volumes:
+  promtail-positions:
+  loki-data:

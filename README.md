@@ -1,6 +1,6 @@
 # DTC245200797 — Hệ thống quản lý hợp đồng
 
-Ứng dụng Django quản lý hợp đồng và bên liên quan; PostgreSQL lưu trữ dữ liệu, pgAdmin quản trị cơ sở dữ liệu, Nginx làm reverse proxy.
+Ứng dụng Django quản lý hợp đồng và bên liên quan; PostgreSQL lưu trữ dữ liệu, pgAdmin quản trị cơ sở dữ liệu, Nginx làm reverse proxy. Prometheus/Grafana giám sát hệ thống; Loki/Promtail tập trung log ứng dụng, web server và database.
 
 ## Yêu cầu
 
@@ -21,11 +21,11 @@ $bytes = New-Object byte[] 48
 [Convert]::ToBase64String($bytes)
 ```
 
-Dùng các chuỗi ngẫu nhiên riêng biệt cho `DJANGO_SECRET_KEY`, `POSTGRES_ADMIN_PASSWORD`, `APP_DB_PASSWORD`, `POSTGRES_EXPORTER_PASSWORD` và `PGADMIN_DEFAULT_PASSWORD`; không đưa `.env` lên Git.
+Dùng các chuỗi ngẫu nhiên riêng biệt cho `DJANGO_SECRET_KEY`, `POSTGRES_ADMIN_PASSWORD`, `APP_DB_PASSWORD`, `POSTGRES_EXPORTER_PASSWORD`, `PGADMIN_DEFAULT_PASSWORD` và `GRAFANA_ADMIN_PASSWORD`; không đưa `.env` lên Git.
 
 ```powershell
-docker compose -f compose.yaml -f compose.monitoring.yaml up --build -d
-docker compose -f compose.yaml -f compose.monitoring.yaml exec web python manage.py createsuperuser
+docker compose -f compose.yaml -f compose.monitoring.yaml -f compose.logging.yaml up --build -d
+docker compose -f compose.yaml -f compose.monitoring.yaml -f compose.logging.yaml exec web python manage.py createsuperuser
 ```
 
 Đợi `docker compose ps` báo các dịch vụ healthy. Tạo tài khoản quản trị Django rồi đăng nhập để quản lý dữ liệu.
@@ -52,9 +52,21 @@ pgAdmin kết nối máy chủ PostgreSQL với host `db`, port `5432`, và tài
 
 Prometheus thu thập `/metrics` của Django, trạng thái Nginx qua `nginx-prometheus-exporter`, PostgreSQL qua `postgres-exporter`, và số liệu container qua cAdvisor. Dashboard được provision tự động trong Grafana; kiểm tra target tại Prometheus `/targets`.
 
+## Log tập trung / LogQL
+
+Promtail đọc log file dùng chung của Django, Nginx và PostgreSQL rồi gửi đến Loki. Truy vấn tại **Grafana → Explore → Loki**:
+
+```logql
+{service="django"}
+{service="nginx"} |= " 500 "
+sum(count_over_time({service="postgres"}[5m]))
+```
+
+Loki giữ log tối đa 30 ngày. Promtail chỉ đọc volume log và không mount Docker socket.
+
 ## Hardening và lưu ý triển khai
 
-- Django, Nginx, PostgreSQL, Prometheus, Grafana và exporters chạy non-root; `log-init` là container khởi tạo quyền log dùng một lần.
+- Django, Nginx, PostgreSQL, Prometheus, Grafana, Loki, Promtail và exporters chạy non-root; `log-init` là helper root khởi tạo quyền volume một lần, bỏ các capability mặc định và chỉ thêm `CHOWN`/`FOWNER`.
 - PostgreSQL và observability nằm trong network nội bộ; chỉ Nginx công khai cổng 80. pgAdmin, Grafana và Prometheus chỉ bind `127.0.0.1`.
 - Container hỗ trợ được đặt `read_only`, giới hạn filesystem ghi qua `tmpfs`/volume, và bật `no-new-privileges`.
 - Nginx thêm CSP, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, tắt server tokens, giới hạn body và cấu hình reverse proxy.
@@ -65,9 +77,9 @@ Prometheus thu thập `/metrics` của Django, trạng thái Nginx qua `nginx-pr
 ## Kiểm thử
 
 ```powershell
-docker compose -f compose.yaml -f compose.monitoring.yaml run --rm -e DJANGO_TESTING=1 web python manage.py test
-docker compose -f compose.yaml -f compose.monitoring.yaml exec web python manage.py check
-docker compose -f compose.yaml -f compose.monitoring.yaml down
+docker compose -f compose.yaml -f compose.monitoring.yaml -f compose.logging.yaml run --rm -e DJANGO_TESTING=1 web python manage.py test
+docker compose -f compose.yaml -f compose.monitoring.yaml -f compose.logging.yaml exec web python manage.py check
+docker compose -f compose.yaml -f compose.monitoring.yaml -f compose.logging.yaml down
 ```
 
 Test suite dùng SQLite in-memory để không cần cấp quyền tạo database cho tài khoản ứng dụng; môi trường chạy thật vẫn sử dụng PostgreSQL.
