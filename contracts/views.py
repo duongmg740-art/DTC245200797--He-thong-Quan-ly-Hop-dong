@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.db.transaction import atomic
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -23,7 +23,18 @@ def contract_list(request):
     return render(
         request,
         "contracts/contract_list.html",
-        {"contracts": contracts, "query": query, "status": status, "statuses": Contract.Status.choices},
+        {
+            "contracts": contracts,
+            "query": query,
+            "status": status,
+            "statuses": Contract.Status.choices,
+            "summary": Contract.objects.aggregate(
+                total=Count("pk"),
+                active=Count("pk", filter=Q(status=Contract.Status.ACTIVE)),
+                review=Count("pk", filter=Q(status=Contract.Status.REVIEW)),
+                draft=Count("pk", filter=Q(status=Contract.Status.DRAFT)),
+            ),
+        },
     )
 
 

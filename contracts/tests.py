@@ -14,6 +14,11 @@ class ContractWorkflowTests(TestCase):
         response = self.client.get(reverse("contracts:list"))
         self.assertRedirects(response, f"{reverse('login')}?next={reverse('contracts:list')}")
 
+    def test_login_page_uses_the_branded_layout(self):
+        response = self.client.get(reverse("login"))
+        self.assertContains(response, 'class="auth-main"')
+        self.assertContains(response, "Chào mừng trở lại")
+
     def test_create_contract_with_parties_and_status(self):
         self.client.force_login(self.user)
         response = self.client.post(
@@ -36,6 +41,8 @@ class ContractWorkflowTests(TestCase):
         Contract.objects.create(contract_number="HD-2", title="Có hiệu lực", status=Contract.Status.ACTIVE)
         response = self.client.get(reverse("contracts:list"), {"status": Contract.Status.ACTIVE})
         self.assertEqual([contract.contract_number for contract in response.context["contracts"]], ["HD-2"])
+        self.assertEqual(response.context["summary"], {"total": 2, "active": 1, "review": 0, "draft": 1})
+        self.assertContains(response, "Danh sách hợp đồng")
 
     def test_invalid_contract_period_is_rejected(self):
         self.client.force_login(self.user)

@@ -1,30 +1,43 @@
 {% extends "base.html" %}
 {% block title %}Danh sách hợp đồng{% endblock %}
 {% block content %}
-<div class="toolbar">
-  <div><h1>Hợp đồng</h1><p class="muted">Tạo mới, theo dõi trạng thái và các bên tham gia.</p></div>
-  <a class="button" href="{% url 'contracts:create' %}">+ Tạo hợp đồng</a>
+<div class="page-heading">
+  <div><p class="eyebrow">Quản lý hồ sơ</p><h1>Hợp đồng</h1><p class="page-description">Theo dõi tập trung các thỏa thuận và tiến độ thực hiện.</p></div>
+  <a class="button" href="{% url 'contracts:create' %}">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    Tạo hợp đồng
+  </a>
 </div>
-<section class="card">
-  <form class="toolbar" method="get">
-    <div><label for="q">Tìm kiếm</label><input id="q" name="q" value="{{ query }}" placeholder="Mã, tên hoặc bên liên quan"></div>
-    <div><label for="status">Trạng thái</label><select id="status" name="status"><option value="">Tất cả</option>{% for value,label in statuses %}<option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
-    <button class="button" type="submit">Lọc</button>
+<section class="stats-grid" aria-label="Tổng quan hợp đồng">
+  <article class="stat-card"><div class="stat-label">Tổng hợp đồng</div><div class="stat-number">{{ summary.total }}</div></article>
+  <article class="stat-card" style="--stat-bg:#e4f6ef;--stat-color:#159570"><div class="stat-label">Đang hiệu lực</div><div class="stat-number">{{ summary.active }}</div></article>
+  <article class="stat-card" style="--stat-bg:#fff5dc;--stat-color:#c28a25"><div class="stat-label">Đang xem xét</div><div class="stat-number">{{ summary.review }}</div></article>
+  <article class="stat-card" style="--stat-bg:#eff2f6;--stat-color:#8390a2"><div class="stat-label">Bản nháp</div><div class="stat-number">{{ summary.draft }}</div></article>
+</section>
+<section class="panel filter-panel" aria-label="Tìm kiếm và lọc hợp đồng">
+  <form class="filter-form" method="get">
+    <div class="filter-field search-field"><label for="q">Tìm kiếm hợp đồng</label><input id="q" name="q" value="{{ query }}" placeholder="Nhập mã, tên hoặc bên liên quan"></div>
+    <div class="filter-field"><label for="status">Trạng thái</label><select id="status" name="status"><option value="">Tất cả trạng thái</option>{% for value,label in statuses %}<option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    <button class="button" type="submit">Áp dụng bộ lọc</button>
   </form>
 </section>
-<section class="card">
-  <table>
-    <thead><tr><th>Mã</th><th>Tên hợp đồng</th><th>Trạng thái</th><th>Hiệu lực</th><th>Bên liên quan</th></tr></thead>
+<section class="panel">
+  <div class="panel-head"><div><h2>Danh sách hợp đồng</h2><p>{{ contracts|length }} hồ sơ được tìm thấy</p></div></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Mã hợp đồng</th><th>Tên hợp đồng</th><th>Trạng thái</th><th>Thời hạn</th><th>Bên liên quan</th></tr></thead>
     <tbody>
     {% for contract in contracts %}
       <tr>
-        <td><a href="{% url 'contracts:detail' contract.pk %}">{{ contract.contract_number }}</a></td>
-        <td>{{ contract.title }}</td><td>{{ contract.get_status_display }}</td>
-        <td>{{ contract.effective_date|default:"—" }} – {{ contract.expiry_date|default:"—" }}</td>
-        <td>{% for party in contract.parties.all %}{{ party.name }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
+        <td><a class="table-link" href="{% url 'contracts:detail' contract.pk %}">{{ contract.contract_number }}</a></td>
+        <td><a class="contract-title" href="{% url 'contracts:detail' contract.pk %}">{{ contract.title }}</a></td>
+        <td><span class="status-badge status-{{ contract.status }}">{{ contract.get_status_display }}</span></td>
+        <td>{{ contract.effective_date|date:"d/m/Y"|default:"—" }}{% if contract.expiry_date %}<br><span class="contract-id">đến {{ contract.expiry_date|date:"d/m/Y" }}</span>{% endif %}</td>
+        <td>{% for party in contract.parties.all %}{{ party.name }}{% if not forloop.last %}, {% endif %}{% empty %}<span class="muted">Chưa cập nhật</span>{% endfor %}</td>
       </tr>
-    {% empty %}<tr><td colspan="5" class="muted">Chưa có hợp đồng phù hợp.</td></tr>{% endfor %}
+    {% empty %}
+      <tr><td colspan="5"><div class="empty-state"><span class="empty-icon" aria-hidden="true">⌕</span><strong>Chưa tìm thấy hợp đồng</strong><p>Thử thay đổi từ khóa hoặc bộ lọc, hoặc tạo hợp đồng mới.</p></div></td></tr>
+    {% endfor %}
     </tbody>
-  </table>
+  </table></div>
 </section>
 {% endblock %}

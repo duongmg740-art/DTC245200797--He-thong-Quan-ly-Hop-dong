@@ -1,10 +1,29 @@
 {% extends "base.html" %}
 {% block title %}Bên liên quan{% endblock %}
 {% block content %}
-<div class="toolbar"><div><h1>Bên liên quan</h1><p class="muted">Danh bạ tổ chức, cá nhân tham gia hợp đồng.</p></div><a class="button" href="{% url 'contracts:party-create' %}">+ Thêm bên</a></div>
-<section class="card"><table>
-  <thead><tr><th>Tên</th><th>Người liên hệ</th><th>Email</th><th>Điện thoại</th></tr></thead>
-  <tbody>{% for party in parties %}<tr><td>{{ party.name }}</td><td>{{ party.contact_name|default:"—" }}</td><td>{{ party.email|default:"—" }}</td><td>{{ party.phone|default:"—" }}</td></tr>
-  {% empty %}<tr><td colspan="4" class="muted">Chưa có bên liên quan.</td></tr>{% endfor %}</tbody>
-</table></section>
+<div class="page-heading">
+  <div><p class="eyebrow">Danh bạ đối tác</p><h1>Bên liên quan</h1><p class="page-description">Quản lý thông tin các tổ chức và cá nhân tham gia hợp đồng.</p></div>
+  <a class="button" href="{% url 'contracts:party-create' %}">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    Thêm bên liên quan
+  </a>
+</div>
+<section class="panel">
+  <div class="panel-head"><div><h2>Danh bạ đối tác</h2><p>{{ parties|length }} tổ chức hoặc cá nhân</p></div></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Tổ chức / cá nhân</th><th>Người liên hệ</th><th>Email</th><th>Điện thoại</th></tr></thead>
+    <tbody>
+    {% for party in parties %}
+      <tr>
+        <td><span class="contract-title">{{ party.name }}</span></td>
+        <td>{{ party.contact_name|default:"—" }}</td>
+        <td>{% if party.email %}<a href="mailto:{{ party.email }}">{{ party.email }}</a>{% else %}—{% endif %}</td>
+        <td>{% if party.phone %}<a href="tel:{{ party.phone }}">{{ party.phone }}</a>{% else %}—{% endif %}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="4"><div class="empty-state"><span class="empty-icon" aria-hidden="true">◎</span><strong>Danh bạ chưa có dữ liệu</strong><p>Thêm đối tác để liên kết với các hợp đồng.</p></div></td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</section>
 {% endblock %}

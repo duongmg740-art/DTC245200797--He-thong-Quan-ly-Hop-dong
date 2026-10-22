@@ -1,11 +1,24 @@
 {% extends "base.html" %}
 {% block title %}Thêm bên liên quan{% endblock %}
 {% block content %}
-<section class="card"><h1>Thêm bên liên quan</h1>
-  <form method="post">{% csrf_token %}
-    {{ form.non_field_errors }}
-    {% for field in form %}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}{% endfor %}
-    <p><button class="button" type="submit">Lưu bên liên quan</button> <a class="button secondary" href="{% url 'contracts:parties' %}">Hủy</a></p>
-  </form>
+<div class="page-heading">
+  <div><p class="eyebrow">Danh bạ đối tác</p><h1>Thêm bên liên quan</h1><p class="page-description">Lưu thông tin liên hệ để sử dụng trong các hợp đồng.</p></div>
+</div>
+<section class="panel form-panel">
+  <div class="panel-head"><div><h2>Thông tin đối tác</h2><p>Cập nhật thông tin tổ chức hoặc cá nhân.</p></div></div>
+  <div class="form-body">
+    <form method="post">{% csrf_token %}
+      {% if form.non_field_errors %}<div class="non-field-errors">{{ form.non_field_errors }}</div>{% endif %}
+      <div class="form-grid">
+      {% for field in form %}
+        <div class="form-field {% if field.name == 'notes' %}wide{% endif %}">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}{{ field.errors }}
+        </div>
+      {% endfor %}
+      </div>
+      <div class="form-actions"><button class="button" type="submit">Lưu bên liên quan</button><a class="button secondary" href="{% url 'contracts:parties' %}">Hủy</a></div>
+    </form>
+  </div>
 </section>
 {% endblock %}

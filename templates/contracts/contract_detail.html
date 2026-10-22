@@ -1,14 +1,32 @@
 {% extends "base.html" %}
 {% block title %}{{ contract.contract_number }}{% endblock %}
 {% block content %}
-<section class="card">
-  <p class="muted">{{ contract.contract_number }} · {{ contract.get_status_display }}</p>
-  <h1>{{ contract.title }}</h1>
-  <p>{{ contract.description|linebreaksbr|default:"Chưa có mô tả." }}</p>
-  <p><strong>Giá trị:</strong> {{ contract.value|default:"—" }} VND</p>
-  <p><strong>Thời hạn:</strong> {{ contract.effective_date|default:"—" }} – {{ contract.expiry_date|default:"—" }}</p>
-  <p><strong>Bên liên quan:</strong></p>
-  <ul>{% for party in contract.parties.all %}<li>{{ party.name }}{% if party.contact_name %} — {{ party.contact_name }}{% endif %}{% empty %}<li>Chưa khai báo</li>{% endfor %}</ul>
-  <p><a class="button" href="{% url 'contracts:edit' contract.pk %}">Cập nhật hợp đồng</a> <a class="button secondary" href="{% url 'contracts:list' %}">Quay lại</a></p>
-</section>
+<div class="page-heading">
+  <div><p class="eyebrow"><a href="{% url 'contracts:list' %}">Hợp đồng</a> / Chi tiết hồ sơ</p><h1>Chi tiết hợp đồng</h1><p class="page-description">Thông tin và các bên tham gia hợp đồng.</p></div>
+  <a class="button secondary" href="{% url 'contracts:list' %}">Quay lại danh sách</a>
+</div>
+<div class="detail-grid">
+  <section class="panel detail-main">
+    <div class="detail-kicker"><span>{{ contract.contract_number }}</span><span class="status-badge status-{{ contract.status }}">{{ contract.get_status_display }}</span></div>
+    <h1>{{ contract.title }}</h1>
+    <p class="detail-description">{{ contract.description|linebreaksbr|default:"Chưa có mô tả cho hợp đồng này." }}</p>
+    <div class="detail-list">
+      <div class="detail-item"><span class="detail-label">Giá trị hợp đồng</span><span class="detail-value">{% if contract.value %}{{ contract.value|floatformat:0 }} VND{% else %}Chưa cập nhật{% endif %}</span></div>
+      <div class="detail-item"><span class="detail-label">Thời gian hiệu lực</span><span class="detail-value">{{ contract.effective_date|date:"d/m/Y"|default:"—" }} &nbsp;–&nbsp; {{ contract.expiry_date|date:"d/m/Y"|default:"—" }}</span></div>
+    </div>
+    <div class="detail-actions"><a class="button" href="{% url 'contracts:edit' contract.pk %}">Cập nhật hợp đồng</a><a class="button secondary" href="{% url 'contracts:list' %}">Quay lại</a></div>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><div><h2>Bên liên quan</h2><p>Các đối tác được liên kết</p></div></div>
+    <div class="form-body">
+      <ul class="party-list">
+        {% for party in contract.parties.all %}
+          <li class="party-item"><span class="party-avatar">{{ party.name|slice:":1"|upper }}</span><span>{{ party.name }}{% if party.contact_name %}<br><span class="contract-id">{{ party.contact_name }}</span>{% endif %}</span></li>
+        {% empty %}
+          <li class="muted">Chưa có bên liên quan được khai báo.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
+</div>
 {% endblock %}
