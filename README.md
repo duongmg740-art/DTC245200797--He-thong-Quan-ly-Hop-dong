@@ -35,8 +35,8 @@ docker compose -f compose.yaml -f compose.monitoring.yaml -f compose.logging.yam
 | Ứng dụng hợp đồng (qua Nginx) | http://localhost |
 | Django Admin | http://localhost/admin/ |
 | pgAdmin | http://127.0.0.1:5050 |
-| Grafana | http://127.0.0.1:3000 |
-| Prometheus | http://127.0.0.1:9090 |
+| Grafana | http://127.0.0.1:3001 |
+| Prometheus | http://127.0.0.1:9091 |
 
 pgAdmin kết nối máy chủ PostgreSQL với host `db`, port `5432`, và tài khoản quản trị `POSTGRES_ADMIN_USER` trong `.env`. Ứng dụng dùng tài khoản riêng `APP_DB_USER` không có quyền superuser; exporter dùng tài khoản `POSTGRES_EXPORTER_USER` chỉ có quyền giám sát.
 
@@ -66,8 +66,9 @@ Loki giữ log tối đa 30 ngày. Promtail chỉ đọc volume log và không m
 
 ## Hardening và lưu ý triển khai
 
-- Django, Nginx, PostgreSQL, Prometheus, Grafana, Loki, Promtail và exporters chạy non-root; `log-init` là helper root khởi tạo quyền volume một lần, bỏ các capability mặc định và chỉ thêm `CHOWN`/`FOWNER`.
+- Django, Nginx, PostgreSQL, Prometheus, Grafana, Loki, Promtail và exporters chạy non-root; `log-init` là helper root khởi tạo quyền volume một lần, bỏ các capability mặc định và chỉ thêm `CHOWN`, `FOWNER`, `DAC_OVERRIDE`.
 - PostgreSQL và observability nằm trong network nội bộ; chỉ Nginx công khai cổng 80. pgAdmin, Grafana và Prometheus chỉ bind `127.0.0.1`.
+- pgAdmin và dashboard giám sát dùng network quản trị riêng; chỉ các cổng bind vào loopback mới được mở cho máy host.
 - Container hỗ trợ được đặt `read_only`, giới hạn filesystem ghi qua `tmpfs`/volume, và bật `no-new-privileges`.
 - Nginx thêm CSP, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, tắt server tokens, giới hạn body và cấu hình reverse proxy.
 - cAdvisor cần UID root cùng một số mount host dạng read-only để thu thập số liệu container. Mount `/var/run` có thể chứa Docker socket; quyền truy cập socket tương đương quyền quản trị host dù mount chỉ đọc. Không expose cAdvisor ra host; với production có yêu cầu bảo mật cao, thay bằng socket proxy giới hạn endpoint hoặc nguồn metrics khác.

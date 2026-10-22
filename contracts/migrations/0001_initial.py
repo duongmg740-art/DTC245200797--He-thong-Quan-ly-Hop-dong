@@ -39,7 +39,6 @@ class Migration(migrations.Migration):
                 ("status", models.CharField(choices=[("draft", "Bản nháp"), ("review", "Đang xem xét"), ("active", "Đang hiệu lực"), ("expired", "Đã hết hạn"), ("terminated", "Đã chấm dứt")], default="draft", max_length=20, verbose_name="Trạng thái")),
                 ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="Ngày tạo")),
                 ("updated_at", models.DateTimeField(auto_now=True, verbose_name="Cập nhật lần cuối")),
-                ("parties", models.ManyToManyField(related_name="contracts", through="contracts.ContractParty", to="contracts.counterparty")),
             ],
             options={"verbose_name": "Hợp đồng", "verbose_name_plural": "Hợp đồng", "ordering": ["-updated_at"]},
         ),
@@ -56,5 +55,14 @@ class Migration(migrations.Migration):
                     models.UniqueConstraint(fields=("contract", "counterparty"), name="unique_contract_counterparty")
                 ],
             },
+        ),
+        migrations.AddField(
+            model_name="contract",
+            name="parties",
+            field=models.ManyToManyField(
+                related_name="contracts",
+                through="contracts.ContractParty",
+                to="contracts.counterparty",
+            ),
         ),
     ]

@@ -3,7 +3,7 @@ from django.urls import include, path
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("metrics", include("django_prometheus.urls")),
+    path("", include("django_prometheus.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
     path("", include("contracts.urls")),
 ]
