@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Bên liên quan{% endblock %}
+{% block content %}
+<div class="toolbar"><div><h1>Bên liên quan</h1><p class="muted">Danh bạ tổ chức, cá nhân tham gia hợp đồng.</p></div><a class="button" href="{% url 'contracts:party-create' %}">+ Thêm bên</a></div>
+<section class="card"><table>
+  <thead><tr><th>Tên</th><th>Người liên hệ</th><th>Email</th><th>Điện thoại</th></tr></thead>
+  <tbody>{% for party in parties %}<tr><td>{{ party.name }}</td><td>{{ party.contact_name|default:"—" }}</td><td>{{ party.email|default:"—" }}</td><td>{{ party.phone|default:"—" }}</td></tr>
+  {% empty %}<tr><td colspan="4" class="muted">Chưa có bên liên quan.</td></tr>{% endfor %}</tbody>
+</table></section>
+{% endblock %}

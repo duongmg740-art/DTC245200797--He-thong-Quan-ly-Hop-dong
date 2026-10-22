@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Danh sách hợp đồng{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <div><h1>Hợp đồng</h1><p class="muted">Tạo mới, theo dõi trạng thái và các bên tham gia.</p></div>
+  <a class="button" href="{% url 'contracts:create' %}">+ Tạo hợp đồng</a>
+</div>
+<section class="card">
+  <form class="toolbar" method="get">
+    <div><label for="q">Tìm kiếm</label><input id="q" name="q" value="{{ query }}" placeholder="Mã, tên hoặc bên liên quan"></div>
+    <div><label for="status">Trạng thái</label><select id="status" name="status"><option value="">Tất cả</option>{% for value,label in statuses %}<option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    <button class="button" type="submit">Lọc</button>
+  </form>
+</section>
+<section class="card">
+  <table>
+    <thead><tr><th>Mã</th><th>Tên hợp đồng</th><th>Trạng thái</th><th>Hiệu lực</th><th>Bên liên quan</th></tr></thead>
+    <tbody>
+    {% for contract in contracts %}
+      <tr>
+        <td><a href="{% url 'contracts:detail' contract.pk %}">{{ contract.contract_number }}</a></td>
+        <td>{{ contract.title }}</td><td>{{ contract.get_status_display }}</td>
+        <td>{{ contract.effective_date|default:"—" }} – {{ contract.expiry_date|default:"—" }}</td>
+        <td>{% for party in contract.parties.all %}{{ party.name }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
+      </tr>
+    {% empty %}<tr><td colspan="5" class="muted">Chưa có hợp đồng phù hợp.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

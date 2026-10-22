@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Thêm bên liên quan{% endblock %}
+{% block content %}
+<section class="card"><h1>Thêm bên liên quan</h1>
+  <form method="post">{% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}{% endfor %}
+    <p><button class="button" type="submit">Lưu bên liên quan</button> <a class="button secondary" href="{% url 'contracts:parties' %}">Hủy</a></p>
+  </form>
+</section>
+{% endblock %}

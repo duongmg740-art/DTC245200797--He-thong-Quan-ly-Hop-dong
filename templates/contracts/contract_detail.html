@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ contract.contract_number }}{% endblock %}
+{% block content %}
+<section class="card">
+  <p class="muted">{{ contract.contract_number }} · {{ contract.get_status_display }}</p>
+  <h1>{{ contract.title }}</h1>
+  <p>{{ contract.description|linebreaksbr|default:"Chưa có mô tả." }}</p>
+  <p><strong>Giá trị:</strong> {{ contract.value|default:"—" }} VND</p>
+  <p><strong>Thời hạn:</strong> {{ contract.effective_date|default:"—" }} – {{ contract.expiry_date|default:"—" }}</p>
+  <p><strong>Bên liên quan:</strong></p>
+  <ul>{% for party in contract.parties.all %}<li>{{ party.name }}{% if party.contact_name %} — {{ party.contact_name }}{% endif %}{% empty %}<li>Chưa khai báo</li>{% endfor %}</ul>
+  <p><a class="button" href="{% url 'contracts:edit' contract.pk %}">Cập nhật hợp đồng</a> <a class="button secondary" href="{% url 'contracts:list' %}">Quay lại</a></p>
+</section>
+{% endblock %}

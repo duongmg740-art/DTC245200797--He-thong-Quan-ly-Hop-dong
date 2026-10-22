@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Đăng nhập | Quản lý hợp đồng{% endblock %}
+{% block content %}
+<section class="card" style="max-width:440px;margin:3rem auto">
+  <h1>Đăng nhập</h1>
+  <form method="post">{% csrf_token %}
+    {{ form.non_field_errors }}
+    <label for="{{ form.username.id_for_label }}">Tên đăng nhập</label>{{ form.username }}{{ form.username.errors }}
+    <label for="{{ form.password.id_for_label }}">Mật khẩu</label>{{ form.password }}{{ form.password.errors }}
+    {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+    <p><button class="button" type="submit">Đăng nhập</button></p>
+  </form>
+</section>
+{% endblock %}
