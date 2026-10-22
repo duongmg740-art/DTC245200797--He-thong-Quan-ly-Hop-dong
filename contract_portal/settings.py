@@ -63,6 +63,8 @@ DATABASES = {
         "PORT": os.environ.get("POSTGRES_PORT", "5432"),
         "CONN_MAX_AGE": 60,
     }
+    }
+
     if os.environ.get("DJANGO_TESTING") == "1":
         DATABASES["default"] = {
             "ENGINE": "django.db.backends.sqlite3",
